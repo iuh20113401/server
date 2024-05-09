@@ -1,0 +1,17 @@
+{
+  "require": {
+    "firebase/php-jwt": "^6.10",
+    "aws/aws-sdk-php": "^3.305"
+  },
+  "autoload": {
+    "psr-4": {
+      "ControllerGiangVien\\": "controller/giangVien/",
+      "ControllerSinhVien\\": "controller/sinhVien/",
+      "ConTrolTaiKhoan\\": "controller/taiKhoan/",
+      "GiangVien\\": "model/giangVien/",
+      "SinhVien\\": "model/sinhVien/",
+      "TaiKhoan\\": "model/taiKhoan/",
+      "Connect\\": "model/connect/"
+    }
+  }
+}
