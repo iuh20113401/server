@@ -430,49 +430,59 @@ class QuanLyDeTai
         $stmt->execute([":maGiangVien" => $maGiangVien]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    function themHuongDanVaoDoAn($maDoAn, $maHuongDan)
+    function themHuongDanVaoDoAn($maDoAnArray, $maHuongDan)
     {
         if (!$this->conn) {
             return false;
         }
+
         $query = "INSERT INTO tiendo (MaDoAn, MaChiTietHuongDan, TrangThai, NgayBatDau, NgayHoanThanh)
-        SELECT :maDoAn, MaChiTietHuongDan, 0, NgayBatDau, NgayHoanThanh
-        FROM chitiethuongdan
-        WHERE MaHuongDan = :maHuongDan
-        AND NOT EXISTS (
-            SELECT 1
-            FROM tiendo
-            WHERE MaDoAn = :maDoAn
-        )
-        ";
+              SELECT :maDoAn, MaChiTietHuongDan, 0, NgayBatDau, NgayHoanThanh
+              FROM chitiethuongdan
+              WHERE MaHuongDan = :maHuongDan
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM tiendo
+                  WHERE MaDoAn = :maDoAn
+              )";
         $stmt = $this->conn->prepare($query);
-        $result = $stmt->execute([
-            ':maHuongDan' => $maHuongDan,
-            ':maDoAn' => $maDoAn,
-        ]);
-        return $result;
+
+        foreach ($maDoAnArray as $maDoAn) {
+            $result = $stmt->execute([
+                ':maHuongDan' => $maHuongDan,
+                ':maDoAn' => $maDoAn,
+            ]);
+            if (!$result) {
+                return false;
+            }
+        }
+
+        return true;
     }
+
     function themHuongDanVaoDeTai($maDeTai, $maHuongDan)
     {
         if (!$this->conn) {
             return false;
         }
-        $query = "INSERT INTO tiendo (MaDoAn, MaChiTietHuongDan, TrangThai, NgayBatDau, NgayHoanThanh)
-        SELECT da.MaDoAn, cthd.MaChiTietHuongDan, 0, null, null
-        FROM huongdan as hd 
-        JOIN detai as dt on dt.MaGiangVien = hd.MaGiangVien
-        JOIN chitiethuongdan as cthd on cthd.MaHuongDan = hd.MaHuongDan
-        JOIN doan as da on da.maDeTai = dt.MaDeTai
-        LEFT JOIN tiendo as td on td.MaDoAn = da.MaDoAn
-        WHERE dt.MaDeTai = :maDeTai 
-        AND hd.maHuongDan = :maHuongDan
-        AND td.MaDoAn IS NULL
-        ";
-        $stmt = $this->conn->prepare($query);
-        $result = $stmt->execute([
-            ':maHuongDan' => $maHuongDan,
-            ':maDeTai' => $maDeTai,
-        ]);
+        foreach ($maDeTai as $ma) {
+            $query = "INSERT INTO tiendo (MaDoAn, MaChiTietHuongDan, TrangThai, NgayBatDau, NgayHoanThanh)
+            SELECT da.MaDoAn, cthd.MaChiTietHuongDan, 0, null, null
+            FROM huongdan as hd 
+            JOIN detai as dt on dt.MaGiangVien = hd.MaGiangVien
+            JOIN chitiethuongdan as cthd on cthd.MaHuongDan = hd.MaHuongDan
+            JOIN doan as da on da.maDeTai = dt.MaDeTai
+            LEFT JOIN tiendo as td on td.MaDoAn = da.MaDoAn
+            WHERE dt.MaDeTai = :maDeTai 
+            AND hd.maHuongDan = :maHuongDan
+            AND td.MaDoAn IS NULL
+            ";
+            $stmt = $this->conn->prepare($query);
+            $result = $stmt->execute([
+                ':maHuongDan' => $maHuongDan,
+                ':maDeTai' => $ma,
+            ]);
+        }
         return $result;
     }
 

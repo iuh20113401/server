@@ -152,6 +152,7 @@ class ControlQuanLyDeTai
     }
     public function themHuongDanVaoDoAn($maDoAn, $maHuongDan)
     {
+
         return $this->quanLyDeTai->themHuongDanVaoDoAn($maDoAn, $maHuongDan);
     }
 
@@ -294,7 +295,7 @@ class ControlQuanLyDeTai
     //note diemdanh
     public function themMaDiemDanh($data)
     {
-        $diadiem = $data['diadiem'];
+        $diadiem = isset($data['diadiem']) ? $data['diadiem'] : null;
         $ip = isset($data['ip']) ? $data['ip'] : null;
         $loai = $data['loai'];
         $selectedTopics = $data['selectedTopics'];
@@ -304,7 +305,11 @@ class ControlQuanLyDeTai
         $gioKetThuc = date('Y-m-d H:i:s', strtotime($thoiGian . ' minutes', strtotime($gioBatDau)));
         try {
             // Example code to demonstrate the usage
-            $result1 = $this->quanLyDeTai->themMaDiemDanh($ngay, $gioBatDau, $gioKetThuc, $diadiem['lat'], $diadiem['lng'], $ip, $loai);
+            if ($diadiem == null && $ip == null) {
+                $result1 = $this->quanLyDeTai->themMaDiemDanh($ngay, $gioBatDau, $gioKetThuc, null, null, $ip, $loai);
+            } else {
+                $result1 = $this->quanLyDeTai->themMaDiemDanh($ngay, $gioBatDau, $gioKetThuc, $diadiem['lat'], $diadiem['lng'], $ip, $loai);
+            }
             $result = $loai === 'dt' ? $this->themChiTietDiemDanhVaoDeTai($result1, $selectedTopics) : $this->themChiTietDiemDanhVaoDoAn($result1, $selectedTopics);
             return $result1;
         } catch (\Exception $e) {

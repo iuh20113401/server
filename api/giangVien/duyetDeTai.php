@@ -1,36 +1,45 @@
 <?php
+
+use ControllerGiangVien\ControlQuanLyDeTai;
+
 require_once '../../vendor/autoload.php';
 
-header('Access-Control-Allow-Origin: *'); // Allows all origins
-header('Content-Type: application/json'); // Indicates JSON response
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS'); // Allows these methods
-header('Access-Control-Allow-Headers: Content-Type, X-Requested-With'); // Explicitly allows these headers
-use ControllerGiangVien\ControlQuanLyDeTai;
+header('Access-Control-Allow-Origin: *');
+header('Content-Type: application/json');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     // Stops script processing and sends the headers if the request method is OPTIONS
     exit;
 }
 
-function route($action)
+// Router function to handle request
+function route($method, $resource, $data)
 {
     $controller = new ControlQuanLyDeTai();
     try {
-        switch ($action) {
-            case "layDanhSachDeTaiChoDuyet":
-                echo json_encode($controller->layDanhSachDeTaiChoDuyet());
+        switch ($method) {
+            case 'GET':
+                if ($resource === 'deTaiChoDuyet') {
+                    echo json_encode($controller->layDanhSachDeTaiChoDuyet());
+                } else {
+                    echo json_encode(['error' => 'Resource not found']);
+                }
                 break;
-            case 'duyetDeTai':
-                echo json_encode($controller->duyetDeTai(getDataFromBody()));
-                break;
-            case 'yeuCauChinhSuaDeTai':
-                echo json_encode($controller->yeuCauChinhSuaDeTai(getDataFromBody()));
-                break;
-            case 'khongDuyetDeTai':
-                echo json_encode($controller->khongDuyetDeTai(getDataFromBody()));
+            case 'PUT':
+                if ($resource === 'duyetDeTai') {
+                    echo json_encode($controller->duyetDeTai($data));
+                } else if ($resource === 'yeuCauChinhSuaDeTai') {
+                    echo json_encode($controller->yeuCauChinhSuaDeTai($data));
+                } else if ($resource === 'khongDuyetDeTai') {
+                    echo json_encode($controller->khongDuyetDeTai($data));
+                } else {
+                    echo json_encode(['error' => 'Resource not found']);
+                }
                 break;
             default:
-                echo json_encode(['error' => 'Hành động không phù hợp']);
+                echo json_encode(['error' => 'Method not allowed']);
         }
     } catch (Exception $e) {
         http_response_code(500);
@@ -38,20 +47,22 @@ function route($action)
     }
 }
 
+// Main request handling
+$method = $_SERVER['REQUEST_METHOD'];
+$resource = isset($_GET['resource']) ? $_GET['resource'] : '';
+$data = getDataFromBody();
+
 function getDataFromBody()
 {
     if (!empty($_FILES)) {
-        // Handle form data with file upload
         $data = $_POST;
-        $data['file_info'] = $_FILES['hinhanh'];
+        if (isset($_FILES['hinhanh'])) {
+            $data['file_info'] = $_FILES['hinhanh'];
+        }
         return $data;
     } else {
         return json_decode(file_get_contents('php://input'), true);
     }
 }
 
-if (!isset($_REQUEST['action'])) {
-    echo json_encode(['error' => 'No action requested']);
-} else {
-    route($_REQUEST['action']);
-}
+route($method, $resource, $data);

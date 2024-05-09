@@ -1,16 +1,16 @@
-
 <?php
 
 use ControllerGiangVien\ControlQuanLyDeTai;
 
 require_once '../../vendor/autoload.php';
 
+// Load CORS headers
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 
-
+// Handle OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
@@ -18,73 +18,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Router function to handle request
 function route($method, $resource, $data)
 {
-    /*case "themMaDiemDanh":
-                echo json_encode($controller->themMaDiemDanh(getDataFromBody()));
-                break;
-            case "layDanhSachDanhMuc":
-                echo json_encode($controller->layDanhSachDanhMuc());
-                break;
-            case "themDanhMuc":
-                echo json_encode($controller->themDanhMuc(getDataFromBody()));
-                break;
-            case "thongKeDeTai":
-                echo json_encode($controller->thongKeDeTai(getDataFromBody()));
-                break; */
     $controller = new ControlQuanLyDeTai();
     try {
         switch ($method) {
             case 'GET':
-                if ($resource === 'deTai') {
-                    echo json_encode($controller->layDanhSachDeTai());
-                } else if ($resource === 'huongDan') {
-                    echo json_encode($controller->layDanhSachHuongDan());
-                } else if ($resource === 'lichHop') {
-                    echo json_encode($controller->layDanhSachLichHop());
-                } else if ($resource === 'danhMuc') {
-                    echo json_encode($controller->layDanhSachDanhMuc());
-                } else if ("danhSachDeTaiDaDangKy") {
-                    echo json_encode($controller->layDanhSachDeTaiDaDangKy());
-                } else {
-                    echo json_encode(['error' => 'Invalid resource']);
-                }
+                handleGETRequest($resource, $controller);
                 break;
             case 'POST':
-                if ($resource === 'deTai') {
-                    echo json_encode($controller->themDeTai($data));
-                } else if ($resource === "capNhatAnhDaiDien") {
-                    echo json_encode($controller->capNhatAnhDaiDien($data));
-                } else if ($resource === 'huongDan') {
-                    handleDetailedGuidance($resource, $data, $controller);
-                } else if ($resource === 'lichHop') {
-                    echo json_encode($controller->themLichHopVaoDeTai($data));
-                } else if ($resource === 'danhMuc') {
-                    echo json_encode($controller->themDanhMuc($data));
-                } else if ($resource === 'maDiemDanh') {
-                    echo json_encode($controller->themMaDiemDanh($data));
-                } else if ($resource === "thongKeDeTai") {
-                    echo json_encode($controller->thongKeDeTai($data));
-                } else {
-                    echo json_encode(['error' => 'Invalid resource']);
-                }
+                handlePOSTRequest($resource, $data, $controller);
                 break;
             case 'PUT':
-                if ($resource === 'deTai') {
-                    echo json_encode($controller->suaDeTai($data));
-                } else if ($resource === 'huongDanVaoDeTai') {
-                    echo json_encode($controller->themHuongDanVaoDeTai($data['maDeTai'], $data['maHuongDan']));
-                } else {
-                    echo json_encode(['error' => 'Invalid resource']);
-                }
+                handlePUTRequest($resource, $data, $controller);
                 break;
             case 'DELETE':
-                if ($resource === 'deTai') {
-                    echo json_encode($controller->xoaDeTai($data['maDeTai']));
-                } else {
-                    echo json_encode(['error' => 'Invalid resource']);
-                }
+                handleDELETERequest($resource, $data, $controller);
                 break;
             default:
-                echo json_encode(['error' => 'Invalid method']);
+                echo json_encode(['error' => 'Method not allowed']);
         }
     } catch (Exception $e) {
         http_response_code(500);
@@ -101,6 +51,8 @@ if (!isset($_SERVER['REQUEST_METHOD'])) {
     $data = getDataFromBody();
     route($method, $resource, $data);
 }
+
+// Get request body data
 function getDataFromBody()
 {
     if (!empty($_FILES)) {
@@ -111,11 +63,95 @@ function getDataFromBody()
         return json_decode(file_get_contents('php://input'), true);
     }
 }
+
+// Handle GET request
+function handleGETRequest($resource, $controller)
+{
+    switch ($resource) {
+        case 'deTai':
+            echo json_encode($controller->layDanhSachDeTai());
+            break;
+        case 'huongDan':
+            echo json_encode($controller->layDanhSachHuongDan());
+            break;
+        case 'lichHop':
+            echo json_encode($controller->layDanhSachLichHop());
+            break;
+        case 'danhMuc':
+            echo json_encode($controller->layDanhSachDanhMuc());
+            break;
+        case 'danhSachDeTaiDaDangKy':
+            echo json_encode($controller->layDanhSachDeTaiDaDangKy());
+            break;
+        default:
+            echo json_encode(['error' => 'Invalid resource']);
+    }
+}
+
+// Handle POST request
+function handlePOSTRequest($resource, $data, $controller)
+{
+    switch ($resource) {
+        case 'deTai':
+            echo json_encode($controller->themDeTai($data));
+            break;
+        case 'capNhatAnhDaiDien':
+            echo json_encode($controller->capNhatAnhDaiDien($data));
+            break;
+        case 'huongDanDoAn':
+        case 'huongDanDeTai':
+            handleDetailedGuidance($resource, $data, $controller);
+            break;
+        case 'lichHop':
+            echo json_encode($controller->themLichHopVaoDeTai($data));
+            break;
+        case 'danhMuc':
+            echo json_encode($controller->themDanhMuc($data));
+            break;
+        case 'maDiemDanh':
+            echo json_encode($controller->themMaDiemDanh($data));
+            break;
+        case 'thongKeDeTai':
+            echo json_encode($controller->thongKeDeTai($data));
+            break;
+        default:
+            echo json_encode(['error' => 'Invalid resource']);
+    }
+}
+
+// Handle PUT request
+function handlePUTRequest($resource, $data, $controller)
+{
+    switch ($resource) {
+        case 'deTai':
+            echo json_encode($controller->suaDeTai($data));
+            break;
+        case 'huongDanVaoDeTai':
+            echo json_encode($controller->themHuongDanVaoDeTai($data['maDeTai'], $data['maHuongDan']));
+            break;
+        default:
+            echo json_encode(['error' => 'Invalid resource']);
+    }
+}
+
+// Handle DELETE request
+function handleDELETERequest($resource, $data, $controller)
+{
+    switch ($resource) {
+        case 'deTai':
+            echo json_encode($controller->xoaDeTai($data['maDeTai']));
+            break;
+        default:
+            echo json_encode(['error' => 'Invalid resource']);
+    }
+}
+
+// Handle specific cases for detailed guidance
 function handleDetailedGuidance($resource, $data, $controller)
 {
     if ($resource === 'huongDanDeTai') {
-        echo json_encode($controller->themHuongDanVaoDeTai($data['maDeTai'], $data['maHuongDan']));
+        echo json_encode($controller->themHuongDanVaoDeTai($data['selectedTopics'], $data['maHuongDan']));
     } else if ($resource === 'huongDanDoAn') {
-        echo json_encode($controller->themHuongDanVaoDoAn($data['maDoAn'], $data['maHuongDan']));
+        echo json_encode($controller->themHuongDanVaoDoAn($data['selectedTopics'], $data['maHuongDan']));
     }
 }

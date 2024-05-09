@@ -105,9 +105,9 @@ class ControlSinhVienDeTai
         $maSinhVien = $_GET['maSinhVien'];
         return $this->quanLyDeTai->layThongTinThanhVien($maSinhVien);
     }
-    public function layHuongDanTheoSinhVien($data)
+    public function layHuongDanTheoSinhVien()
     {
-        $maSinhVien = $data['maSinhVien'];
+        $maSinhVien = $_GET['maSinhVien'];
         return $this->quanLyDeTai->layHuongDanTheoSinhVien($maSinhVien);
     }
     public function hoanThanhHuongDan($data)
