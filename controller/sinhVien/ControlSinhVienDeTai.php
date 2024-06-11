@@ -241,4 +241,15 @@ class ControlSinhVienDeTai
         $maSinhVien = $data['maSinhVien'];
         return $this->quanLyDeTai->ghiNhanDiemDanh($maSinhVien, $maDiemDanh);
     }
+
+    // thong tin sinh vien 
+    public function suaThongTinSinhVien($data)
+    {
+        $maSinhVien = $data['maSinhVien'];
+        $hoTen = $data['hoTen'];
+        $email = $data['email'];
+        $soDienThoai = $data['soDienThoai'];
+        $moTa = $data['moTa'];
+        return $this->quanLyDeTai->suaThongTinSinhVien($maSinhVien, $hoTen, $soDienThoai, $email, $moTa);
+    }
 }

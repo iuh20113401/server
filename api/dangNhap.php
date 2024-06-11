@@ -1,5 +1,6 @@
 <?php
 require '../vendor/autoload.php';
+include_once "./JWTToken.php";
 header('Access-Control-Allow-Origin: *'); // Allows all origins
 header('Content-Type: application/json'); // Indicates JSON response
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS'); // Allows these methods
@@ -37,39 +38,16 @@ function dangNhap($taiKhoan, $matKhau, $thoiGian)
     include('../controller/dangNhap.php');
     $p = new ControllDangNhap();
     $res = $p->dangNhap($taiKhoan, $matKhau);
-    if ($res) {
-        $key = "kietdeptrai"; // Ideally stored outside of the source code
-        $payload = [
-            'iss' => 'YourIssuer',
-            'aud' => 'YourAudience',
-            'iat' => time(), // Issued at
-            'exp' => time() + (int)$thoiGian, // Expiry 1 hour from now
-            'userId' => $res['MaTaiKhoan'], // User ID from database
-            'role' => $res['VaiTro'] // User role
-        ];
-        $jwt = JWT::encode($payload, $key, 'HS256');
-        $res['token'] = $jwt; // Append token to response
+    if (!$res) {
+        echo json_encode($res);
+        return;
     }
+    $res = createJWT($res, $thoiGian);
     echo json_encode($res);
     return;
 }
 
-function validateToken()
-{
-    $headers = getallheaders();
-    $jwt = $headers['Authorization'] ?? '';
-    if (!$jwt) {
-        return null;
-    }
-    $jwt = str_replace('Bearer ', '', $jwt);
-    $key = "kietdeptrai";
-    try {
-        $decoded = JWT::decode($jwt, new \Firebase\JWT\Key($key, 'HS256'));
-        return (array) $decoded;
-    } catch (Exception $e) {
-        return null;
-    }
-}
+
 
 function layThongTin()
 {
@@ -77,8 +55,6 @@ function layThongTin()
     $p = new ControllDangNhap();
     $decoded = validateToken();
     if (!$decoded) {
-        http_response_code(401);
-        echo json_encode(['message' => 'Unauthorized']);
         return;
     }
     $data = json_decode(file_get_contents('php://input'), true);

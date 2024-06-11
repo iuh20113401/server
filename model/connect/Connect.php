@@ -16,7 +16,7 @@ class Connect
     public function connect()
     {
         // Assuming connection settings are externalized in a config file or environment variables
-        $host = 'database-1.cxoe844yuzru.ap-southeast-2.rds.amazonaws.com';  // Host name
+        $host = 'congnghemoi.cxoe844yuzru.ap-southeast-2.rds.amazonaws.com';  // Host name
         $dbname = 'congnghemoi';
         $username = 'admin';  // Database username
         $password = 'iuh20113401';  // Database password

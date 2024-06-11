@@ -5,7 +5,9 @@ require_once '../../vendor/autoload.php';
 header('Access-Control-Allow-Origin: *'); // Allows all origins
 header('Content-Type: application/json'); // Indicates JSON response
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS'); // Allows these methods
-header('Access-Control-Allow-Headers: Content-Type, X-Requested-With'); // Explicitly allows these headers
+header('Access-Control-Allow-Headers: Authorization,Content-Type, Accept, X-Requested-With'); // Explicitly allows these headers
+
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     // Stops script processing and sends the headers if the request method is OPTIONS

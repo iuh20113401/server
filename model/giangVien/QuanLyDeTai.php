@@ -35,6 +35,15 @@ class QuanLyDeTai
         );
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    public function layDeTai($maDeTai)
+    {
+        $query = "SELECT * FROM detai where maDeTai = :maDeTai";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute(
+            [":maDeTai" => $maDeTai]
+        );
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
     public function themDeTai($maDeTai, $maGiangVien, $tenDeTai, $moTa, $kyNangCanCo, $ketQuaCanDat, $loai, $danhMuc, $hinhAnh, $tag)
     {
         if (!$this->conn) {
@@ -67,13 +76,13 @@ class QuanLyDeTai
             ':maTag' => $maTag,
         ]);
     }
-    public function suaDeTai($maDeTai, $tenDeTai, $moTa, $kyNangCanCo, $ketQuaCanDat)
+    public function suaDeTai($maDeTai, $tenDeTai, $moTa, $kyNangCanCo, $ketQuaCanDat, $loai, $danhMuc, $tag)
     {
         if (!$this->conn) {
             return false;
         }
         // Use an UPDATE statement to modify an existing record
-        $query = "UPDATE detai SET tenDeTai = :tenDeTai, moTa = :moTa, kyNangCanCo = :kyNangCanCo, ketQuaCanDat = :ketQuaCanDat WHERE maDeTai = :maDeTai";
+        $query = "UPDATE detai SET tenDeTai = :tenDeTai, moTa = :moTa, kyNangCanCo = :kyNangCanCo, ketQuaCanDat = :ketQuaCanDat , loai = :loai, danhmuc =:danhMuc, tag=:tag WHERE maDeTai = :maDeTai";
         $stmt = $this->conn->prepare($query);
         $result = $stmt->execute([
             ':maDeTai' => $maDeTai,
@@ -81,6 +90,9 @@ class QuanLyDeTai
             ':moTa' => $moTa,
             ':kyNangCanCo' => $kyNangCanCo,
             ':ketQuaCanDat' => $ketQuaCanDat,
+            ':loai' => $loai,
+            ':danhMuc' => $danhMuc,
+            ':tag' => $tag,
         ]);
         return $result;
     }
@@ -485,7 +497,6 @@ class QuanLyDeTai
         }
         return $result;
     }
-
     //note Lich hop
 
     public function themLichHopVaoDeTai($maDeTai, $tieuDe, $ghiChu, $ngay, $gio, $phong)
@@ -501,6 +512,23 @@ class QuanLyDeTai
         $stmt = $this->conn->prepare($query);
         $result = $stmt->execute([
             ':maDeTai' => $maDeTai,
+            ':tieuDe' => $tieuDe,
+            ':ghiChu' => $ghiChu,
+            ':ngay' => $ngay,
+            ':gio' => $gio,
+            ':phong' => $phong,
+        ]);
+        return $result;
+    }
+    public function themLichHopVaoDoAn($maDoAn, $tieuDe, $ghiChu, $ngay, $gio, $phong)
+    {
+        if (!$this->conn) {
+            return false;
+        }
+        $query = "INSERT INTO lichhop (MaDoAn, TieuDe, GhiChu, Ngay, Gio, Phong) VALUES (:maDoAn, :tieuDe, :ghiChu, :ngay, :gio, :phong)";
+        $stmt = $this->conn->prepare($query);
+        $result = $stmt->execute([
+            ':maDoAn' => $maDoAn,
             ':tieuDe' => $tieuDe,
             ':ghiChu' => $ghiChu,
             ':ngay' => $ngay,
@@ -588,7 +616,7 @@ class QuanLyDeTai
                 COUNT(d.maDoAn) AS soLuongDoAn
                 FROM 
                     danhmucdetai dm
-                JOIN 
+                LEFT JOIN 
                     detai dt ON dm.MaDanhMuc = dt.DanhMuc
                 LEFT JOIN 
                     doan d ON dt.MaDeTai = d.maDeTai
@@ -641,7 +669,7 @@ class QuanLyDeTai
     //thong ke de tai 
     public function thongKeDeTaiTheoTrangThai($maGiangVien)
     {
-        $query = "SELECT COUNT(CASE WHEN dt.TrangThai = 'Chờ duyệt' THEN 1 ELSE NULL END) AS soLuongTrangThaiChoDuyet, 
+        $query = "SELECT COUNT(*) as soLuongDeTai,COUNT(CASE WHEN dt.TrangThai = 'Chờ duyệt' THEN 1 ELSE NULL END) AS soLuongTrangThaiChoDuyet, 
         COUNT(CASE WHEN dt.TrangThai = 'Đã duyệt' THEN 1 ELSE NULL END) AS soLuongTrangThaiDaDuyet,
         COUNT(CASE WHEN dt.TrangThai = 'Không duyệt' THEN 1 ELSE NULL END) AS soLuongTrangThaiKhongDuyet,
         COUNT(CASE WHEN dt.TrangThai = 'Đã đăng ký' THEN 1 ELSE NULL END) AS soLuongTrangThaiDaDangKy,
@@ -663,5 +691,18 @@ class QuanLyDeTai
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':maGiangVien' => $maGiangVien]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    //thong tin sinh vien 
+    public function suaThongTinGiangVien($maGiangVien, $hoTen, $soDienThoai, $email, $moTa)
+    {
+        $query = "UPDATE giangvien SET HoTen = :hoTen, SoDienThoai = :soDienThoai, Email = :email, MoTa = :moTa WHERE maGiangVien = :maGiangVien";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([
+            ':maGiangVien' => $maGiangVien,
+            ':hoTen' => $hoTen,
+            ':soDienThoai' => $soDienThoai,
+            ':email' => $email,
+            ':moTa' => $moTa
+        ]);
     }
 }

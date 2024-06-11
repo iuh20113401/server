@@ -2,13 +2,14 @@
 
 use ControllerGiangVien\ControlQuanLyDeTai;
 
+include_once '../JWTToken.php';
 require_once '../../vendor/autoload.php';
 
 // Load CORS headers
-header('Access-Control-Allow-Origin: *');
-header('Content-Type: application/json');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
+header('Access-Control-Allow-Origin: *'); // Allows all origins
+header('Content-Type: application/json'); // Indicates JSON response
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS'); // Allows these methods
+header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept, X-Requested-With'); // Explicitly allows these headers
 
 // Handle OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -47,6 +48,10 @@ if (!isset($_SERVER['REQUEST_METHOD'])) {
     echo json_encode(['error' => 'No method specified']);
 } else {
     $method = $_SERVER['REQUEST_METHOD'];
+    $decoded = validateToken();
+    if (!$decoded) {
+        return;
+    }
     $resource = $_GET['resource'] ?? '';
     $data = getDataFromBody();
     route($method, $resource, $data);
@@ -71,6 +76,9 @@ function handleGETRequest($resource, $controller)
         case 'deTai':
             echo json_encode($controller->layDanhSachDeTai());
             break;
+        case "deTaiTheoMa":
+            echo json_encode($controller->layDeTai());
+            break;
         case 'huongDan':
             echo json_encode($controller->layDanhSachHuongDan());
             break;
@@ -84,6 +92,7 @@ function handleGETRequest($resource, $controller)
             echo json_encode($controller->layDanhSachDeTaiDaDangKy());
             break;
         default:
+            http_response_code(405); // Not Found
             echo json_encode(['error' => 'Invalid resource']);
     }
 }
@@ -98,12 +107,18 @@ function handlePOSTRequest($resource, $data, $controller)
         case 'capNhatAnhDaiDien':
             echo json_encode($controller->capNhatAnhDaiDien($data));
             break;
+        case 'huongDan':
+            echo json_encode($controller->themHuongDan($data));
+            break;
         case 'huongDanDoAn':
         case 'huongDanDeTai':
             handleDetailedGuidance($resource, $data, $controller);
             break;
         case 'lichHop':
             echo json_encode($controller->themLichHopVaoDeTai($data));
+            break;
+        case "lichHopDoAn":
+            echo json_encode($controller->themLichHopVaoDoAn($data));
             break;
         case 'danhMuc':
             echo json_encode($controller->themDanhMuc($data));
@@ -115,6 +130,8 @@ function handlePOSTRequest($resource, $data, $controller)
             echo json_encode($controller->thongKeDeTai($data));
             break;
         default:
+            http_response_code(405); // Not Found
+
             echo json_encode(['error' => 'Invalid resource']);
     }
 }
@@ -123,6 +140,9 @@ function handlePOSTRequest($resource, $data, $controller)
 function handlePUTRequest($resource, $data, $controller)
 {
     switch ($resource) {
+        case 'thongTinGiangVien':
+            echo json_encode($controller->suaThongTinGiangVien($data));
+            break;
         case 'deTai':
             echo json_encode($controller->suaDeTai($data));
             break;
@@ -130,6 +150,7 @@ function handlePUTRequest($resource, $data, $controller)
             echo json_encode($controller->themHuongDanVaoDeTai($data['maDeTai'], $data['maHuongDan']));
             break;
         default:
+            http_response_code(405); // Not Found
             echo json_encode(['error' => 'Invalid resource']);
     }
 }
@@ -142,6 +163,7 @@ function handleDELETERequest($resource, $data, $controller)
             echo json_encode($controller->xoaDeTai($data['maDeTai']));
             break;
         default:
+            http_response_code(405); // Not Found
             echo json_encode(['error' => 'Invalid resource']);
     }
 }

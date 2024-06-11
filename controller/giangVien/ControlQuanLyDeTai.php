@@ -20,6 +20,11 @@ class ControlQuanLyDeTai
         $maGiangVien = $_GET['maGiangVien'];
         return $this->quanLyDeTai->layDanhSachDeTai($maGiangVien);
     }
+    public function layDeTai()
+    {
+        $maDeTai = $_GET['maDeTai'];
+        return $this->quanLyDeTai->layDeTai($maDeTai);
+    }
     public function capNhatAnhDaiDien($data)
     {
         $targetDir = '../../uploads/';
@@ -77,10 +82,25 @@ class ControlQuanLyDeTai
     public function themDeTai($data)
     {
         $success = true;
-        if (isset($_FILES['hinhanh'])) {
-            $image = $_FILES['hinhanh'];
-            $targetPath = "E:/xampp/htdocs/Server/uploads/" . basename($image['name']);
-            $success = move_uploaded_file($image['tmp_name'], $targetPath);
+        $s3 = new S3Client([
+            'version' => 'latest',
+            'region'  => 'ap-southeast-2',
+            'credentials' => [
+                'key'    => 'AKIAZI2LI37WZ5FT53DM',
+                'secret' => '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',
+            ],
+        ]);
+        if (isset($data['file_info'])) {
+            $file = $data['file_info'];
+            $s3->putObject([
+                'Bucket' => 'iuhcongnghemoi',
+                'Key'    => 'hinhanh/' . $file['name'],
+                'Body'   => fopen(
+                    $file['tmp_name'],
+                    'r'
+                ),
+            ]);
+            $success = true;
         }
         if ($success) {
             return $this->quanLyDeTai->themDeTai(
@@ -92,7 +112,7 @@ class ControlQuanLyDeTai
                 $data['ketQuaCanDat'],
                 $data['loai'],
                 $data['danhMuc'],
-                $targetPath,
+                "https://iuhcongnghemoi.s3.ap-southeast-2.amazonaws.com/hinhanh/" . $file['name'],
                 $data['tag'],
             );
         } else {
@@ -107,7 +127,10 @@ class ControlQuanLyDeTai
             $data['tenDeTai'],
             $data['moTa'],
             $data['kyNangCanCo'],
-            $data['ketQuaCanDat']
+            $data['ketQuaCanDat'],
+            $data['loai'],
+            $data['danhMuc'],
+            $data['tag'],
         );
     }
 
@@ -287,6 +310,26 @@ class ControlQuanLyDeTai
         }
         return $time;
     }
+    public function themLichHopVaoDoAn($data)
+    {
+        $tieuDe = $data['tieuDe'];
+        $maDoAn = $data['selectedTopics'];
+        $diaDiem = $data['diaDiem'];
+        $ghiChu = $data['ghiChu'];
+        $thoiGian = $data['thoiGian'];
+        $dateTime = explode("T", $thoiGian);
+        $date = $dateTime[0];
+        $time = date('H:i:s', strtotime($dateTime[1]));
+
+        // Your code here to process the data and perform the desired actions
+
+        // Example code to demonstrate the usage
+        $result = [];
+        foreach ($maDoAn as $ma) {
+            $result[] = $this->quanLyDeTai->themLichHopVaoDoAn($ma, $tieuDe, $ghiChu, $date, $time, $diaDiem);
+        }
+        return $time;
+    }
     public function layDanhSachLichHop()
     {
         $maGiangVien = $_GET['ma'];
@@ -358,12 +401,25 @@ class ControlQuanLyDeTai
         $thongKeTienDo = $this->quanLyDeTai->thongKeTienDo($maGiangVien);
         $thongKeDeTaiTheoTrangThai = $this->quanLyDeTai->thongKeDeTaiTheoTrangThai($maGiangVien);
         $thongKeDeTaiTheoDanhMuc = $this->quanLyDeTai->thongKeDeTaiTheoDanhMuc($maGiangVien);
+        $thongKeSinhVien = $this->quanLyDeTai->layDanhSachSinhVien($maGiangVien);
         $result = (object) [
             'thongKeDoAN' => $thongKeDoAN,
             'thongKeTienDo' => $thongKeTienDo,
             'thongKeDeTaiTheoTrangThai' => $thongKeDeTaiTheoTrangThai,
-            'thongKeDeTaiTheoDanhMuc' => $thongKeDeTaiTheoDanhMuc
+            'thongKeDeTaiTheoDanhMuc' => $thongKeDeTaiTheoDanhMuc,
+            'thongKeSinhVien' => $thongKeSinhVien
         ];
         return $result;
+    }
+
+    //note thong tin giang vien 
+    public function suaThongTinGiangVien($data)
+    {
+        $maGiangVien = $data['maGiangVien'];
+        $hoTen = $data['hoTen'];
+        $email = $data['email'];
+        $soDienThoai = $data['soDienThoai'];
+        $moTa = $data['moTa'];
+        return $this->quanLyDeTai->suaThongTinGiangVien($maGiangVien, $hoTen, $soDienThoai, $email, $moTa);
     }
 }

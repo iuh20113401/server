@@ -5,11 +5,10 @@ require_once '../../vendor/autoload.php';
 use ControllerGiangVien\ControlQuanLyDeTai;
 
 // Load CORS headers
-header('Access-Control-Allow-Origin: *');
-header('Content-Type: application/json');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
-
+header('Access-Control-Allow-Origin: *'); // Allows all origins
+header('Content-Type: application/json'); // Indicates JSON response
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS'); // Allows these methods
+header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept, X-Requested-With'); // Explicitly allows these headers
 // Create instance of the controller
 $controller = new ControlQuanLyDeTai();
 
@@ -73,12 +72,22 @@ function handlePOSTRequest($resource, $data)
 }
 
 // Main request handling
-$method = $_SERVER['REQUEST_METHOD'];
-$resource = isset($_REQUEST['resource']) ? $_REQUEST['resource'] : '';
-$data = getDataFromBody();
-
-route($method, $resource, $data);
-
+if (!isset($_SERVER['REQUEST_METHOD'])) {
+    echo json_encode(['error' => 'No method specified']);
+} else {
+    $method = $_SERVER['REQUEST_METHOD'];
+    $decoded = validateToken();
+    if (!$decoded) {
+        return;
+    }
+    $resource = $_GET['resource'] ?? '';
+    $data = getDataFromBody();
+    route(
+        $method,
+        $resource,
+        $data
+    );
+}
 // Get request body data
 function getDataFromBody()
 {

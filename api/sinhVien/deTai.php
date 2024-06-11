@@ -3,12 +3,12 @@
 use ControllerSinhVien\ControlSinhVienDeTai;
 
 require_once '../../vendor/autoload.php';
-
+include_once "../JWTToken.php";
 // Load CORS headers
-header('Access-Control-Allow-Origin: *');
-header('Content-Type: application/json');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
+header('Access-Control-Allow-Origin: *'); // Allows all origins
+header('Content-Type: application/json'); // Indicates JSON response
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS'); // Allows these methods
+header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept, X-Requested-With'); // Explicitly allows these headers
 
 // Handle OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -18,14 +18,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Create an instance of the controller
 $controller = new ControlSinhVienDeTai();
 
-// Main request handling
-$method = $_SERVER['REQUEST_METHOD'];
-$resource = isset($_GET['resource']) ? $_GET['resource'] : '';
-$data = getDataFromBody();
-
-// Route the request
-route($method, $resource, $data);
-
+if (!isset($_SERVER['REQUEST_METHOD'])) {
+    echo json_encode(['error' => 'No method specified']);
+} else {
+    $method = $_SERVER['REQUEST_METHOD'];
+    $decoded = validateToken();
+    if (!$decoded) {
+        return;
+    }
+    $resource = $_GET['resource'] ?? '';
+    $data = getDataFromBody();
+    route($method, $resource, $data);
+}
 // Router function to handle request
 function route($method, $resource, $data)
 {
@@ -37,6 +41,9 @@ function route($method, $resource, $data)
                 break;
             case 'POST':
                 handlePOSTRequest($resource, $data);
+                break;
+            case 'PUT':
+                handlePUTRequest($resource, $data);
                 break;
             default:
                 http_response_code(405); // Method Not Allowed
@@ -114,7 +121,18 @@ function handlePOSTRequest($resource, $data)
             echo json_encode(['error' => 'Resource not found']);
     }
 }
-
+function handlePUTRequest($resource, $data)
+{
+    global $controller;
+    switch ($resource) {
+        case 'thongTinSinhVien':
+            echo json_encode($controller->suaThongTinSinhVien($data));
+            break;
+        default:
+            http_response_code(404); // Not Found
+            echo json_encode(['error' => 'Resource not found']);
+    }
+}
 // Get request body data
 function getDataFromBody()
 {

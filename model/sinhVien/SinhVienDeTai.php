@@ -246,4 +246,18 @@ class SinhVienDeTai
             ':maDiemDanh' => $maDiemDanh,
         ]);
     }
+
+    // thongtin sinh vien 
+    public function suaThongTinSinhVien($maSinhVien, $hoTen, $soDienThoai, $email, $moTa)
+    {
+        $query = "UPDATE sinhvien SET HoTen = :hoTen, SoDienThoai = :soDienThoai, Email = :email, MoTa = :moTa WHERE MaSinhVien = :maSinhVien";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([
+            ':maSinhVien' => $maSinhVien,
+            ':hoTen' => $hoTen,
+            ':soDienThoai' => $soDienThoai,
+            ':email' => $email,
+            ':moTa' => $moTa
+        ]);
+    }
 }

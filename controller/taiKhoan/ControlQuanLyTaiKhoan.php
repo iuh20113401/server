@@ -49,8 +49,8 @@ class ControlQuanLyTaiKhoan
         $hoTen = $data['hoTen'];
         $gioiTinh = $data['gioiTinh'];
         $ngaySinh = $data['ngaySinh'];
-        $soDienThoai = $data['soDienThoai'] || null;
-        $email = $data['email'] || null;
+        $soDienThoai = $data['soDienThoai'] ? $data['soDienThoai'] : null;
+        $email = $data['email'] ? $data['email'] : null;
         $vaiTro = $data['vaiTro'];
         return $this->quanLyTaiKhoan->themGiangVien($maGiangVien, $hoTen, $gioiTinh, $ngaySinh, $soDienThoai, $email, $vaiTro);
     }
